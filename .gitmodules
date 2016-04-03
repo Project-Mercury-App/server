@@ -1,0 +1,3 @@
+[submodule "mongoose-cpp"]
+	path = mongoose-cpp
+	url = https://github.com/Gregwar/mongoose-cpp.git
