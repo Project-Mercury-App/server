@@ -1,3 +1,6 @@
 [submodule "mongoose-cpp"]
 	path = mongoose-cpp
 	url = https://github.com/Gregwar/mongoose-cpp.git
+[submodule "pqxx"]
+	path = pqxx
+	url = https://github.com/Ambrosys/pqxx.git

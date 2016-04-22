@@ -8,11 +8,13 @@
 #include <map>
 #include <mongoose/Server.h>
 #include <mongoose/WebController.h>
+#include <pqxx/pqxx>
 
 string TWILIO_NUM = "+17572315125";
 
 using namespace std;
 using namespace Mongoose;
+using namespace pqxx;
 
 class MyController : public WebController {
     public:
@@ -55,15 +57,82 @@ class MyController : public WebController {
 			  }
 		  }
 
+		  void send_im() {
+
+      }
+
+      void authenticate(Request &request, StreamResponse &response) {
+
+      }
+
+      void get_all_groups(Request &request, StreamResponse &response) {
+
+      }
+
+      void get_user(Request &request, StreamResponse &response) {
+
+      }
+
+      void get_group(Request &request, StreamResponse &response) {
+
+      }
+
+      void create_group(Request &request, StreamResponse &response) {
+
+      }
+
         void setup() {
             addRoute("POST", "/receive_sms", MyController, receive_sms);
-				addRoute("POST", "/receive_im", MyController, receive_im);
+    				addRoute("POST", "/receive_im", MyController, receive_im);
+    				/*addRoute("POST", "/authenticate", MyController, authenticate);
+    				addRoute("POST", "/get_all_groups", MyController, get_all_groups);
+    				addRoute("POST", "/get_user", MyController, get_user);
+    				addRoute("POST", "/get_group", MyController, get_group);
+    				addRoute("POST", "/create_group", MyController, create_group);
+				/*
+					Authentication - if successful, return user object with id, email, name
+					Get all groups - return array of all those fields in the database
+					Get a user given user id
+					Get group given group id
+					Get all messages given a group
+					Create a group
+				*/
         }
 };
 
 
-int main()
-{
+int main() {
+
+	try {
+    //host=pdc-amd01.poly.edu dbname=sw2371 user=jsw407 password=ecrnpazb
+		connection C("host="+getenv("pghost")+" dbname=" + getenv("pgdbname") + " user=" + getenv("pguser") + " password=" + getenv("pgpassword"));
+		cout << "Connected to " << C.dbname() << endl;
+		/*
+		work W(C);
+
+		result R = W.exec("SELECT name FROM employee");
+
+		cout << "Found " << R.size() << "employees:" << endl;
+		for (result::const_iterator r = R.begin();
+		     r != R.end();
+		     ++r)
+		{
+			cout << r[0].c_str() << endl;
+		}
+
+		cout << "Doubling all employees' salaries..." << endl;
+		W.exec("UPDATE employee SET salary=salary*2");
+
+		cout << "Making changes definite: ";
+		W.commit();
+		cout << "ok." << endl;
+		*/
+	}
+	catch (const exception &e) {
+		cerr << e.what() << endl;
+		return 1;
+	}
+
     MyController myController;
     Server server(8080);
     server.registerController(&myController);
