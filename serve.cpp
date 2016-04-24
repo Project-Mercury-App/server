@@ -5,16 +5,23 @@
 #endif
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
 #include <map>
 #include <mongoose/Server.h>
 #include <mongoose/WebController.h>
 #include <pqxx/pqxx>
+#include "databaseQueries.cpp"
 
 string TWILIO_NUM = "+17572315125";
 
 using namespace std;
 using namespace Mongoose;
 using namespace pqxx;
+
+string strcast(char* str_) {
+  string str = str_;
+  return str;
+}
 
 class MyController : public WebController {
     public:
@@ -84,11 +91,13 @@ class MyController : public WebController {
         void setup() {
             addRoute("POST", "/receive_sms", MyController, receive_sms);
     				addRoute("POST", "/receive_im", MyController, receive_im);
-    				/*addRoute("POST", "/authenticate", MyController, authenticate);
+
+            addRoute("POST", "/authenticate", MyController, authenticate);
     				addRoute("POST", "/get_all_groups", MyController, get_all_groups);
     				addRoute("POST", "/get_user", MyController, get_user);
     				addRoute("POST", "/get_group", MyController, get_group);
     				addRoute("POST", "/create_group", MyController, create_group);
+
 				/*
 					Authentication - if successful, return user object with id, email, name
 					Get all groups - return array of all those fields in the database
@@ -105,7 +114,7 @@ int main() {
 
 	try {
     //host=pdc-amd01.poly.edu dbname=sw2371 user=jsw407 password=ecrnpazb
-		connection C("host="+getenv("pghost")+" dbname=" + getenv("pgdbname") + " user=" + getenv("pguser") + " password=" + getenv("pgpassword"));
+		connection C("host=" + strcast(getenv("pghost")) + " dbname=" + strcast(getenv("pgdbname")) + " user=" + strcast(getenv("pguser")) + " password=" + strcast(getenv("pgpassword")));
 		cout << "Connected to " << C.dbname() << endl;
 		/*
 		work W(C);
