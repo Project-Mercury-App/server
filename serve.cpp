@@ -25,17 +25,39 @@ string strcast(char* str_) {
 
 class MyController : public WebController {
     public:
-        void receive_sms(Request &request, StreamResponse &response) {
-				//cerr << "URL: " << request.getUrl() << "\n";
-				//cerr << "Method: " << request.getMethod() << "\n";
-				//cerr << "Data: " << request.getData() << "\n";
+      void twilio(Request &request, StreamResponse &response) {
+  			//cerr << "URL: " << request.getUrl() << "\n";
+  			//cerr << "Method: " << request.getMethod() << "\n";
+  			//cerr << "Data: " << request.getData() << "\n";
 
 				map<string, string> myMap = request.getAllVariable();
 				for(auto elem : myMap) {
    				cerr << elem.first << " " << elem.second << "\n";
 				}
-				response << form_sms_response("+1" + myMap["From"].erase(0,3), "Test successful: " + myMap["Body"]);
+        try {
+
         }
+        catch(const std::exception &e) {
+          response << "ERROR: " << e.what();
+        }
+				response << form_sms_response("+1" + myMap["From"].erase(0,3), "Test successful: " + myMap["Body"]);
+      }
+
+      void http(Request &request, StreamResponse &response) {
+        map<string, string> myMap = request.getAllVariable();
+        string r = "";
+        for(auto elem : myMap) {
+          r += "\n" + elem.first + ": " + elem.second;
+   				cerr << elem.first << ": " << elem.second << "\n";
+				}
+        try {
+
+        }
+        catch(const std::exception &e) {
+          response << "ERROR: " << e.what();
+        }
+        response << r;
+      }
 
 		  string form_sms_response(string to, string message) {
 				string sms = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
@@ -45,7 +67,7 @@ class MyController : public WebController {
 				return sms;
 		  }
 
-		  void send_sms() {
+		  void send_sms(string phone_number, string msg) {
 			  /*
 
 			  curl -X POST 'https://api.twilio.com/2010-04-01/Accounts/{Account SID}/Messages.xml' \
@@ -57,56 +79,118 @@ class MyController : public WebController {
 				*/
 		  }
 
-		  void receive_im(Request &request, StreamResponse &response) {
+      void send_im() {
+
+      }
+
+
+
+		  void send_message(Request &request, StreamResponse &response) {
 			  map<string, string> myMap = request.getAllVariable();
 			  for(auto elem : myMap) {
 				  cerr << elem.first << " " << elem.second << "\n";
 			  }
+        //getGroup
+        //postMessage
 		  }
 
-		  void send_im() {
+      void post_message(double group_id, string msg) {
+        //database INSERT
+        send_message_to_members(group_id, msg);
+      }
 
+      void send_message_to_members(double group_id, string msg) {
+        //getGroup
+        //for all users in group
+          //send message
       }
 
       void authenticate(Request &request, StreamResponse &response) {
-
+        map<string, string> myMap = request.getAllVariable();
+        try {
+          //TODO: If user exists, return id
+        }
+        catch(const std::exception &e) {
+          //TODO: If not, create user and return id
+        }
       }
 
       void get_all_groups(Request &request, StreamResponse &response) {
+        map<string, string> myMap = request.getAllVariable();
 
+        std::string::size_type sz;     // alias of size_t
+        double user_id = std::stod (myMap["user_id"], &sz);
+
+        try {
+          pqxx::result r = Query::getGroupsFromUser(user_id);
+          response << r.query();
+        }
+        catch(const std::exception &e) {
+          response << "ERROR: " << e.what();
+        }
       }
 
       void get_user(Request &request, StreamResponse &response) {
+        map<string, string> myMap = request.getAllVariable();
 
+        std::string::size_type sz;     // alias of size_t
+        double user_id = std::stod (myMap["user_id"], &sz);
+
+        try {
+          pqxx::result r =  Query::getUser(user_id);
+          response << r.query();
+        }
+        catch(const std::exception &e) {
+          response << "ERROR: " << e.what();
+        }
       }
 
       void get_group(Request &request, StreamResponse &response) {
+        map<string, string> myMap = request.getAllVariable();
 
+        std::string::size_type sz;     // alias of size_t
+        double group_id = std::stod (myMap["group_id"], &sz);
+
+        try {
+          pqxx::result r =  Query::getGroupInfo(group_id);
+          response << r.query();
+        }
+        catch(const std::exception &e) {
+          response << "ERROR: " << e.what();
+        }
       }
 
       void create_group(Request &request, StreamResponse &response) {
-
+        map<string, string> myMap = request.getAllVariable();
+        try {
+          Query::createGroup(myMap["group_name"]);
+          //TODO: What is the group's id?
+          response << myMap["group_name"];
+        }
+        catch(const std::exception &e) {
+          response << "ERROR: " << e.what();
+        }
       }
 
-        void setup() {
-            addRoute("POST", "/receive_sms", MyController, receive_sms);
-    				addRoute("POST", "/receive_im", MyController, receive_im);
+      void setup() {
+          addRoute("POST", "/twilio", MyController, twilio);
+          addRoute("POST", "/http", MyController, http);
+          addRoute("POST", "/send_message", MyController, send_message);
+          addRoute("POST", "/authenticate", MyController, authenticate);
+  				addRoute("POST", "/get_all_groups", MyController, get_all_groups);
+  				addRoute("POST", "/get_user", MyController, get_user);
+  				addRoute("POST", "/get_group", MyController, get_group);
+  				addRoute("POST", "/create_group", MyController, create_group);
 
-            addRoute("POST", "/authenticate", MyController, authenticate);
-    				addRoute("POST", "/get_all_groups", MyController, get_all_groups);
-    				addRoute("POST", "/get_user", MyController, get_user);
-    				addRoute("POST", "/get_group", MyController, get_group);
-    				addRoute("POST", "/create_group", MyController, create_group);
-
-				/*
-					Authentication - if successful, return user object with id, email, name
-					Get all groups - return array of all those fields in the database
-					Get a user given user id
-					Get group given group id
-					Get all messages given a group
-					Create a group
-				*/
-        }
+			/*
+				Authentication - if successful, return user object with id, email, name
+				Get all groups - return array of all those fields in the database
+				Get a user given user id
+				Get group given group id
+				Get all messages given a group
+				Create a group
+			*/
+      }
 };
 
 
@@ -142,17 +226,17 @@ int main() {
 		return 1;
 	}
 
-    MyController myController;
-    Server server(8080);
-    server.registerController(&myController);
+  MyController myController;
+  Server server(8080);
+  server.registerController(&myController);
 
-    server.start();
+  server.start();
 
-    while (1) {
-#ifdef WIN32
-		Sleep(10000);
-#else
-        sleep(10);
-#endif
-    }
+  while (1) {
+    #ifdef WIN32
+  	 Sleep(10000);
+    #else
+      sleep(10);
+    #endif
+  }
 }
